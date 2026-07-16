@@ -63,6 +63,10 @@ namespace NovitecContabilidad.Models
         [Column("estado_vuelto")]
         public string EstadoVuelto { get; set; } = "No Aplica"; // Pendiente, Devuelto, No Aplica
 
+        [StringLength(255)]
+        [Column("comprobante_url")]
+        public string? ComprobanteUrl { get; set; }
+
         [Column("created_at")]
         public DateTime? CreatedAt { get; set; }
 

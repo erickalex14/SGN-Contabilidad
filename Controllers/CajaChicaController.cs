@@ -156,7 +156,7 @@ namespace NovitecContabilidad.Controllers
         {
             public string FechaComprobante { get; set; } = string.Empty;
             public string NroComprobante { get; set; } = string.Empty;
-            public string Proveedor { get; set; } = string.Empty;
+            public string? Proveedor { get; set; }
             public string Descripcion { get; set; } = string.Empty;
             public string TipoGasto { get; set; } = string.Empty;
             public decimal SubtotalSinIva { get; set; }
@@ -164,6 +164,7 @@ namespace NovitecContabilidad.Controllers
             public decimal ValorEntregado { get; set; }
             public string? UsuarioBeneficiado { get; set; }
             public string EstadoVuelto { get; set; } = "No Aplica";
+            public string? ComprobanteUrl { get; set; }
         }
 
         [HttpPost("{id}/items")]
@@ -229,6 +230,7 @@ namespace NovitecContabilidad.Controllers
                 UsuarioBeneficiado = req.UsuarioBeneficiado,
                 VueltoEsperado = vueltoEsperado,
                 EstadoVuelto = estadoVuelto,
+                ComprobanteUrl = req.ComprobanteUrl,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow
             };
@@ -255,6 +257,11 @@ namespace NovitecContabilidad.Controllers
             if (item.CajaChica.Estado != "Abierta")
             {
                 return BadRequest(new { ok = false, error = "La Caja Chica está cerrada." });
+            }
+
+            if (item.EstadoVuelto == "Devuelto")
+            {
+                return BadRequest(new { ok = false, error = "No se puede editar un ítem cuyo vuelto ya fue devuelto y conciliado." });
             }
 
             if (!IsSuperAdmin() && item.CajaChica.SucursalId != GetUserSucursalId())
@@ -301,6 +308,7 @@ namespace NovitecContabilidad.Controllers
             item.UsuarioBeneficiado = req.UsuarioBeneficiado;
             item.VueltoEsperado = vueltoEsperado;
             item.EstadoVuelto = estadoVuelto;
+            item.ComprobanteUrl = req.ComprobanteUrl;
             item.UpdatedAt = DateTime.UtcNow;
 
             item.CajaChica.UpdatedAt = DateTime.UtcNow;
@@ -324,6 +332,11 @@ namespace NovitecContabilidad.Controllers
             if (item.CajaChica.Estado != "Abierta")
             {
                 return BadRequest(new { ok = false, error = "La Caja Chica está cerrada." });
+            }
+
+            if (item.EstadoVuelto == "Devuelto")
+            {
+                return BadRequest(new { ok = false, error = "No se puede eliminar un ítem cuyo vuelto ya fue devuelto y conciliado." });
             }
 
             if (!IsSuperAdmin() && item.CajaChica.SucursalId != GetUserSucursalId())
