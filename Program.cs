@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using NovitecContabilidad.Data;
 using NovitecContabilidad.Services;
+using NovitecContabilidad.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -37,7 +38,11 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
-// 3. Register Excel Export Service
+// 3. Register Repositories and Services
+builder.Services.AddScoped<ICajaChicaRepository, CajaChicaRepository>();
+builder.Services.AddScoped<ICajaChicaService, CajaChicaService>();
+
+// 4. Register Excel Export Service
 string templatePath = Path.Combine(builder.Environment.ContentRootPath, "PLANTILLA_CAJA_CHICA_NOVICOMPU.xlsx");
 builder.Services.AddSingleton(new ExcelExportService(templatePath));
 
