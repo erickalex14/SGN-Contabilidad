@@ -26,7 +26,21 @@ namespace NovitecContabilidad.Services
             {
                 var ws = workbook.Worksheet("INFORME_CAJA_CHICA");
 
-                // 1. Insertar logo de Novitec en A1 si existe
+                // 1. Eliminar cualquier imagen previa en la plantilla (como el logo viejo de NOVICOMPU)
+                try
+                {
+                    var existingPictures = ws.Pictures.ToList();
+                    foreach (var pic in existingPictures)
+                    {
+                        pic.Delete();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error al eliminar imágenes previas: {ex.Message}");
+                }
+
+                // Insertar logo de Novitec si existe
                 string directory = Path.GetDirectoryName(_templatePath) ?? "";
                 string logoPath = Path.Combine(directory, "logo_novitec.png");
                 if (File.Exists(logoPath))
@@ -34,8 +48,8 @@ namespace NovitecContabilidad.Services
                     try
                     {
                         ws.AddPicture(logoPath)
-                          .MoveTo(ws.Cell("A1"))
-                          .Scale(0.3);
+                          .MoveTo(ws.Cell("F1"))
+                          .Scale(0.35);
                     }
                     catch (Exception ex)
                     {
@@ -159,6 +173,9 @@ namespace NovitecContabilidad.Services
                 // 5. Escribir el custodio de forma dinámica en el bloque de firmas (originalmente en D43)
                 int signatureNameRow = 43 + (maxRow - 38);
                 ws.Cell(signatureNameRow, 4).Value = cabecera.CustodioNombre;
+
+                // 6. Escribir el fondo inicial de la caja chica de forma dinámica (originalmente en P30, desplazado a T30 debido a las 4 nuevas columnas)
+                ws.Cell(30, 20).Value = cabecera.FondoInicial;
 
                 using (var ms = new MemoryStream())
                 {
