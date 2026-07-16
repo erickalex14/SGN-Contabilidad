@@ -1,0 +1,24 @@
+## Ignore build output and artifacts
+bin/
+obj/
+
+## Ignore user-specific files and configurations
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Ignore IDE settings
+.vs/
+.vscode/
+.idea/
+
+## Ignore local launch settings (can contain development URLs/secrets)
+Properties/launchSettings.json
+
+## Ignore application secrets and database credentials
+appsettings.json
+appsettings.Development.json
+appsettings.Production.json
+appsettings.*.json
+!appsettings.Example.json
