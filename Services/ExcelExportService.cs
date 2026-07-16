@@ -54,19 +54,22 @@ namespace NovitecContabilidad.Services
                 // 3. Renombrar columna Proveedor a Beneficiario
                 ws.Cell(7, 4).Value = "BENEFICIARIO / EMPLEADO";
 
-                // 4. Crear encabezados para los campos adicionales en la columna R (columna 18) en adelante
-                // Esto evita chocar con el cuadro de resumen (columnas L a P)
-                ws.Cell(7, 18).Value = "VALOR ENTREGADO";
-                ws.Cell(7, 19).Value = "VUELTO ESPERADO";
-                ws.Cell(7, 20).Value = "ESTADO VUELTO";
-                ws.Cell(7, 21).Value = "COMPROBANTE ADJUNTO";
+                // 4. Insertar 4 columnas nuevas antes de la columna K (columna 11)
+                // Esto desplaza el cuadro de resumen (columnas L a P) automáticamente a la derecha
+                ws.Column(11).InsertColumnsBefore(4);
 
-                // Copiar estilo de cabecera de la columna J
+                // Escribir los encabezados en las nuevas columnas K, L, M, N (columnas 11, 12, 13, 14)
+                ws.Cell(7, 11).Value = "VALOR ENTREGADO";
+                ws.Cell(7, 12).Value = "VUELTO ESPERADO";
+                ws.Cell(7, 13).Value = "ESTADO VUELTO";
+                ws.Cell(7, 14).Value = "COMPROBANTE ADJUNTO";
+
+                // Copiar estilo de cabecera de la columna J (columna 10)
                 var headerStyle = ws.Cell(7, 10).Style;
-                ws.Cell(7, 18).Style = headerStyle;
-                ws.Cell(7, 19).Style = headerStyle;
-                ws.Cell(7, 20).Style = headerStyle;
-                ws.Cell(7, 21).Style = headerStyle;
+                ws.Cell(7, 11).Style = headerStyle;
+                ws.Cell(7, 12).Style = headerStyle;
+                ws.Cell(7, 13).Style = headerStyle;
+                ws.Cell(7, 14).Style = headerStyle;
 
                 var items = cabecera.Detalles.OrderBy(d => d.FechaComprobante).ThenBy(d => d.Id).ToList();
                 
@@ -98,40 +101,40 @@ namespace NovitecContabilidad.Services
                     ws.Cell(currentRow, 9).FormulaA1 = $"IF(H{currentRow}>0,($I$7*H{currentRow}),0)";
                     ws.Cell(currentRow, 10).FormulaA1 = $"G{currentRow}+H{currentRow}+I{currentRow}";
 
-                    // Escribir campos de vuelto y comprobante en las columnas adicionales R, S, T, U
-                    ws.Cell(currentRow, 18).Value = item.ValorEntregado;
-                    ws.Cell(currentRow, 19).FormulaA1 = $"IF(R{currentRow}>J{currentRow},R{currentRow}-J{currentRow},0)";
-                    ws.Cell(currentRow, 20).Value = item.EstadoVuelto;
+                    // Escribir campos de vuelto y comprobante en las nuevas columnas al lado del total (K, L, M, N)
+                    ws.Cell(currentRow, 11).Value = item.ValorEntregado;
+                    ws.Cell(currentRow, 12).FormulaA1 = $"IF(K{currentRow}>J{currentRow},K{currentRow}-J{currentRow},0)";
+                    ws.Cell(currentRow, 13).Value = item.EstadoVuelto;
 
                     if (!string.IsNullOrEmpty(item.ComprobanteUrl))
                     {
                         try
                         {
-                            ws.Cell(currentRow, 21).Value = "Ver Comprobante";
-                            ws.Cell(currentRow, 21).GetHyperlink().ExternalAddress = new Uri(item.ComprobanteUrl);
+                            ws.Cell(currentRow, 14).Value = "Ver Comprobante";
+                            ws.Cell(currentRow, 14).GetHyperlink().ExternalAddress = new Uri(item.ComprobanteUrl);
                         }
                         catch
                         {
-                            ws.Cell(currentRow, 21).Value = item.ComprobanteUrl;
+                            ws.Cell(currentRow, 14).Value = item.ComprobanteUrl;
                         }
                     }
 
-                    // Formatear las nuevas celdas
+                    // Formatear las nuevas celdas copiando el estilo de la columna J
                     var dataStyle = ws.Cell(currentRow, 10).Style;
                     
-                    ws.Cell(currentRow, 18).Style = dataStyle;
-                    ws.Cell(currentRow, 18).Style.NumberFormat.Format = "$#,##0.00";
+                    ws.Cell(currentRow, 11).Style = dataStyle;
+                    ws.Cell(currentRow, 11).Style.NumberFormat.Format = "$#,##0.00";
                     
-                    ws.Cell(currentRow, 19).Style = dataStyle;
-                    ws.Cell(currentRow, 19).Style.NumberFormat.Format = "$#,##0.00";
+                    ws.Cell(currentRow, 12).Style = dataStyle;
+                    ws.Cell(currentRow, 12).Style.NumberFormat.Format = "$#,##0.00";
 
-                    ws.Cell(currentRow, 20).Style = dataStyle;
-                    ws.Cell(currentRow, 20).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Cell(currentRow, 13).Style = dataStyle;
+                    ws.Cell(currentRow, 13).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
 
-                    ws.Cell(currentRow, 21).Style = dataStyle;
-                    ws.Cell(currentRow, 21).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
-                    ws.Cell(currentRow, 21).Style.Font.Underline = XLFontUnderlineValues.Single;
-                    ws.Cell(currentRow, 21).Style.Font.FontColor = XLColor.FromHtml("#0f766e"); // Teal brand color
+                    ws.Cell(currentRow, 14).Style = dataStyle;
+                    ws.Cell(currentRow, 14).Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Center;
+                    ws.Cell(currentRow, 14).Style.Font.Underline = XLFontUnderlineValues.Single;
+                    ws.Cell(currentRow, 14).Style.Font.FontColor = XLColor.FromHtml("#0f766e"); // Teal brand color
                 }
 
                 // Ajustar totales principales (Fila de total está después de maxRow)
@@ -141,17 +144,17 @@ namespace NovitecContabilidad.Services
                 ws.Cell(totalRow, 9).FormulaA1 = $"SUM(I8:I{maxRow})";
                 ws.Cell(totalRow, 10).FormulaA1 = $"SUM(J8:J{maxRow})";
                 
-                // Sumar totales de las nuevas columnas en R y S
-                ws.Cell(totalRow, 18).FormulaA1 = $"SUM(R8:R{maxRow})";
-                ws.Cell(totalRow, 19).FormulaA1 = $"SUM(S8:S{maxRow})";
+                // Sumar totales de las nuevas columnas K y L
+                ws.Cell(totalRow, 11).FormulaA1 = $"SUM(K8:K{maxRow})";
+                ws.Cell(totalRow, 12).FormulaA1 = $"SUM(L8:L{maxRow})";
 
                 var totalStyle = ws.Cell(totalRow, 10).Style;
                 
-                ws.Cell(totalRow, 18).Style = totalStyle;
-                ws.Cell(totalRow, 18).Style.NumberFormat.Format = "$#,##0.00";
+                ws.Cell(totalRow, 11).Style = totalStyle;
+                ws.Cell(totalRow, 11).Style.NumberFormat.Format = "$#,##0.00";
 
-                ws.Cell(totalRow, 19).Style = totalStyle;
-                ws.Cell(totalRow, 19).Style.NumberFormat.Format = "$#,##0.00";
+                ws.Cell(totalRow, 12).Style = totalStyle;
+                ws.Cell(totalRow, 12).Style.NumberFormat.Format = "$#,##0.00";
 
                 // 5. Escribir el custodio de forma dinámica en el bloque de firmas (originalmente en D43)
                 int signatureNameRow = 43 + (maxRow - 38);
