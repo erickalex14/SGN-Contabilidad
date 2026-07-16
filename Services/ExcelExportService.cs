@@ -153,6 +153,10 @@ namespace NovitecContabilidad.Services
                 ws.Cell(totalRow, 19).Style = totalStyle;
                 ws.Cell(totalRow, 19).Style.NumberFormat.Format = "$#,##0.00";
 
+                // 5. Escribir el custodio de forma dinámica en el bloque de firmas (originalmente en D43)
+                int signatureNameRow = 43 + (maxRow - 38);
+                ws.Cell(signatureNameRow, 4).Value = cabecera.CustodioNombre;
+
                 using (var ms = new MemoryStream())
                 {
                     workbook.SaveAs(ms);

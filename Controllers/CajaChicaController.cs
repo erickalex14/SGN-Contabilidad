@@ -38,6 +38,35 @@ namespace NovitecContabilidad.Controllers
             return int.TryParse(claim, out var id) ? id : 0;
         }
 
+        private async Task<string> GetSucursalNameAsync(int sucursalId)
+        {
+            try
+            {
+                using (var conn = _context.Database.GetDbConnection())
+                {
+                    await conn.OpenAsync();
+                    using (var cmd = conn.CreateCommand())
+                    {
+                        cmd.CommandText = "SELECT ciudad FROM sucursales WHERE id = @id";
+                        var param = cmd.CreateParameter();
+                        param.ParameterName = "@id";
+                        param.Value = sucursalId;
+                        cmd.Parameters.Add(param);
+
+                        var result = await cmd.ExecuteScalarAsync();
+                        return result?.ToString() ?? "Novitec Quito";
+                    }
+                }
+            }
+            catch
+            {
+                // Fail-safe fallbacks
+                if (sucursalId == 2) return "Novitec Guayaquil";
+                if (sucursalId == 3) return "Novitec Manta";
+                return "Novitec Quito";
+            }
+        }
+
         private bool IsSuperAdmin()
         {
             var esSuperAdminClaim = User.FindFirst("es_superadmin")?.Value;
@@ -487,11 +516,8 @@ namespace NovitecContabilidad.Controllers
 
             try
             {
-                // Nombre de la sucursal para rellenar en cabecera de la plantilla
-                // Esto podría venir de la base de datos o por parámetro simple
-                string nombreSucursal = "SUCURSAL NOVICOMPU QUITO";
-                if (cabecera.SucursalId == 1739) nombreSucursal = "SUCURSAL NOVICOMPU MANTA";
-                else if (cabecera.SucursalId == 1738) nombreSucursal = "SUCURSAL NOVICOMPU GUAYAQUIL";
+                // Nombre de la sucursal obtenido dinámicamente de la base de datos
+                string nombreSucursal = await GetSucursalNameAsync(cabecera.SucursalId);
 
                 var fileBytes = _excelService.ExportCajaChica(cabecera, nombreSucursal);
                 var fileName = $"Informe_Caja_Chica_{cabecera.NroCajaChica}.xlsx";
