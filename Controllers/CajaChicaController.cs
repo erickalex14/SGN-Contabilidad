@@ -146,6 +146,20 @@ namespace NovitecContabilidad.Controllers
             }
         }
 
+        [HttpPatch("items/{itemId}/comprobante")]
+        public async Task<IActionResult> UpdateComprobante(long itemId, [FromBody] UpdateComprobanteRequest req)
+        {
+            try
+            {
+                var dto = await _cajaService.UpdateComprobanteUrlAsync(itemId, req.ComprobanteUrl);
+                return Ok(new { ok = true, message = "Comprobante digital actualizado con éxito.", data = dto });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { ok = false, error = ex.Message });
+            }
+        }
+
         [HttpDelete("items/{itemId}")]
         public async Task<IActionResult> DeleteItem(long itemId)
         {

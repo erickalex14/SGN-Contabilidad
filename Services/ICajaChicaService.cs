@@ -16,5 +16,6 @@ namespace NovitecContabilidad.Services
         Task<CajaChicaCabeceraDto> CloseCajaChicaAsync(long id);
         Task<(CajaChicaCabeceraDto cajaReembolsada, CajaChicaCabeceraDto nuevaCajaAbierta)> ReimburseCajaChicaAsync(long id, ReimburseRequest req);
         Task<Models.CajaChicaCabecera?> GetRawModelForExportAsync(long id);
+        Task<CajaChicaDetalleDto> UpdateComprobanteUrlAsync(long itemId, string? comprobanteUrl);
     }
 }

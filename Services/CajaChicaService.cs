@@ -345,6 +345,23 @@ namespace NovitecContabilidad.Services
             return await _repo.GetByIdWithDetallesAsync(id);
         }
 
+        public async Task<CajaChicaDetalleDto> UpdateComprobanteUrlAsync(long itemId, string? comprobanteUrl)
+        {
+            var item = await _repo.GetDetalleByIdWithCabeceraAsync(itemId);
+            if (item == null || item.CajaChica == null)
+            {
+                throw new KeyNotFoundException("Ítem no encontrado.");
+            }
+
+            item.ComprobanteUrl = comprobanteUrl;
+            item.UpdatedAt = DateTime.UtcNow;
+            item.CajaChica.UpdatedAt = DateTime.UtcNow;
+
+            await _repo.SaveAsync();
+
+            return MapToDetalleDto(item);
+        }
+
         private CajaChicaCabeceraDto MapToCabeceraDto(CajaChicaCabecera c)
         {
             return new CajaChicaCabeceraDto

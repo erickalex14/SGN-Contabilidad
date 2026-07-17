@@ -31,4 +31,9 @@ namespace NovitecContabilidad.DTOs
     {
         public decimal MontoRecarga { get; set; }
     }
+
+    public class UpdateComprobanteRequest
+    {
+        public string? ComprobanteUrl { get; set; }
+    }
 }
