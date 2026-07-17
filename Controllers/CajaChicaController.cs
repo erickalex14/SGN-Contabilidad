@@ -43,12 +43,19 @@ namespace NovitecContabilidad.Controllers
             return GetUserRolId() == 3;
         }
 
+        private int GetUserId()
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            return int.TryParse(claim, out var id) ? id : 0;
+        }
+
         [HttpGet]
         public async Task<IActionResult> List()
         {
             var sucursalId = GetUserSucursalId();
+            var userId = GetUserId();
             var isSa = IsSuperAdmin();
-            var list = await _cajaService.GetCajaChicasBySucursalAsync(sucursalId, isSa);
+            var list = await _cajaService.GetCajaChicasBySucursalAsync(sucursalId, userId, isSa);
             return Ok(new { ok = true, data = list });
         }
 

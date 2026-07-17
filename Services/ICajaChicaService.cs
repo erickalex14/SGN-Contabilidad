@@ -6,7 +6,7 @@ namespace NovitecContabilidad.Services
 {
     public interface ICajaChicaService
     {
-        Task<List<CajaChicaCabeceraDto>> GetCajaChicasBySucursalAsync(int sucursalId, bool isSuperAdmin);
+        Task<List<CajaChicaCabeceraDto>> GetCajaChicasBySucursalAsync(int sucursalId, int userId, bool isSuperAdmin);
         Task<CajaChicaCabeceraDto?> GetCajaChicaByIdAsync(long id);
         Task<string> GetSucursalNameAsync(int sucursalId);
         Task<CajaChicaCabeceraDto> OpenCajaChicaAsync(OpenCajaRequest req, int defaultUserId, string defaultUserName);

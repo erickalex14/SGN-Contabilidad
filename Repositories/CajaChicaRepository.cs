@@ -29,16 +29,17 @@ namespace NovitecContabilidad.Repositories
                 .FirstOrDefaultAsync(c => c.Id == id);
         }
 
-        public async Task<List<CajaChicaCabecera>> GetBySucursalAsync(int sucursalId, bool isSuperAdmin)
+        public async Task<List<CajaChicaCabecera>> GetBySucursalAsync(int sucursalId, int userId, bool isSuperAdmin)
         {
             var query = _context.CajasChicas.AsQueryable();
 
             if (!isSuperAdmin)
             {
-                query = query.Where(c => c.SucursalId == sucursalId);
+                query = query.Where(c => c.SucursalId == sucursalId || c.CustodioUsuarioId == userId);
             }
 
             return await query
+                .Include(c => c.Detalles)
                 .OrderByDescending(c => c.FechaCreacion)
                 .ThenByDescending(c => c.Id)
                 .ToListAsync();

@@ -17,9 +17,9 @@ namespace NovitecContabilidad.Services
             _repo = repo;
         }
 
-        public async Task<List<CajaChicaCabeceraDto>> GetCajaChicasBySucursalAsync(int sucursalId, bool isSuperAdmin)
+        public async Task<List<CajaChicaCabeceraDto>> GetCajaChicasBySucursalAsync(int sucursalId, int userId, bool isSuperAdmin)
         {
-            var list = await _repo.GetBySucursalAsync(sucursalId, isSuperAdmin);
+            var list = await _repo.GetBySucursalAsync(sucursalId, userId, isSuperAdmin);
             return list.Select(MapToCabeceraDto).ToList();
         }
 
