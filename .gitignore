@@ -22,3 +22,7 @@ appsettings.Development.json
 appsettings.Production.json
 appsettings.*.json
 !appsettings.Example.json
+
+## Ignore local Excel templates
+PLANTILLA_CAJA_CHICA_NOVICOMPU.xlsx
+*.xlsx

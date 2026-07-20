@@ -11,13 +11,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 // 1. Configure DB connection (MySQL)
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "server=YOUR_SERVER_IP;port=27639;database=novitecdb_pruebas;user=root;password=YOUR_DB_PASSWORD;";
+    ?? throw new InvalidOperationException("ConnectionStrings:DefaultConnection is not configured.");
 
 builder.Services.AddDbContext<AccountingDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
 
 // 2. Configure JWT Authentication
-var jwtSecret = builder.Configuration["Jwt:Secret"] ?? "YOUR_JWT_SECRET";
+var jwtSecret = builder.Configuration["Jwt:Secret"] 
+    ?? throw new InvalidOperationException("Jwt:Secret is not configured.");
 var key = Encoding.UTF8.GetBytes(jwtSecret);
 
 builder.Services.AddAuthentication(options =>
