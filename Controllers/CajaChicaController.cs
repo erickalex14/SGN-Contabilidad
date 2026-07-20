@@ -68,7 +68,7 @@ namespace NovitecContabilidad.Controllers
                 return NotFound(new { ok = false, error = "Caja Chica no encontrada." });
             }
 
-            if (!IsSuperAdmin() && dto.SucursalId != GetUserSucursalId())
+            if (!IsSuperAdmin() && dto.CustodioUsuarioId != GetUserId())
             {
                 return Forbid();
             }
@@ -109,7 +109,7 @@ namespace NovitecContabilidad.Controllers
                     return NotFound(new { ok = false, error = "Caja Chica no encontrada." });
                 }
 
-                if (!IsSuperAdmin() && dto.SucursalId != GetUserSucursalId())
+                if (!IsSuperAdmin() && dto.CustodioUsuarioId != GetUserId())
                 {
                     return Forbid();
                 }
@@ -196,7 +196,7 @@ namespace NovitecContabilidad.Controllers
                     return NotFound(new { ok = false, error = "Caja Chica no encontrada." });
                 }
 
-                if (!IsSuperAdmin() && dto.SucursalId != GetUserSucursalId())
+                if (!IsSuperAdmin() && dto.CustodioUsuarioId != GetUserId())
                 {
                     return Forbid();
                 }

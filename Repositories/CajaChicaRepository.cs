@@ -35,7 +35,7 @@ namespace NovitecContabilidad.Repositories
 
             if (!isSuperAdmin)
             {
-                query = query.Where(c => c.SucursalId == sucursalId || c.CustodioUsuarioId == userId);
+                query = query.Where(c => c.CustodioUsuarioId == userId);
             }
 
             return await query
