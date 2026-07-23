@@ -45,6 +45,13 @@ namespace NovitecContabilidad.Models
         [Column("iva", TypeName = "decimal(10,2)")]
         public decimal Iva { get; set; } = 0.00m;
 
+        [Column("monto_retencion", TypeName = "decimal(10,2)")]
+        public decimal MontoRetencion { get; set; } = 0.00m;
+
+        [StringLength(100)]
+        [Column("nro_retencion")]
+        public string? NroRetencion { get; set; }
+
         [Column("total", TypeName = "decimal(10,2)")]
         public decimal Total { get; set; } = 0.00m;
 

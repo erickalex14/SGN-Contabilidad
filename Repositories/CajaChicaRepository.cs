@@ -56,6 +56,11 @@ namespace NovitecContabilidad.Repositories
             return await _context.CajasChicas.AnyAsync(c => c.NroCajaChica == nroCajaChica);
         }
 
+        public async Task<int> GetCountBySucursalAsync(int sucursalId)
+        {
+            return await _context.CajasChicas.CountAsync(c => c.SucursalId == sucursalId);
+        }
+
         public async Task AddAsync(CajaChicaCabecera cabecera)
         {
             await _context.CajasChicas.AddAsync(cabecera);

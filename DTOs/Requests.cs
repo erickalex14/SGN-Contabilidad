@@ -21,6 +21,8 @@ namespace NovitecContabilidad.DTOs
         public string TipoGasto { get; set; } = string.Empty;
         public decimal SubtotalSinIva { get; set; }
         public decimal SubtotalConIva { get; set; }
+        public decimal MontoRetencion { get; set; }
+        public string? NroRetencion { get; set; }
         public decimal ValorEntregado { get; set; }
         public string? UsuarioBeneficiado { get; set; }
         public string EstadoVuelto { get; set; } = "No Aplica";

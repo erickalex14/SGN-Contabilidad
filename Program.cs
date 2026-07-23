@@ -42,6 +42,10 @@ builder.Services.AddAuthentication(options =>
 // 3. Register Repositories and Services
 builder.Services.AddScoped<ICajaChicaRepository, CajaChicaRepository>();
 builder.Services.AddScoped<ICajaChicaService, CajaChicaService>();
+builder.Services.AddScoped<ICajaGeneralRepository, CajaGeneralRepository>();
+builder.Services.AddScoped<ICajaGeneralService, CajaGeneralService>();
+builder.Services.AddScoped<IRecuentoB2BRepository, RecuentoB2BRepository>();
+builder.Services.AddScoped<IRecuentoB2BService, RecuentoB2BService>();
 
 // 4. Register Excel Export Service
 string templatePath = Path.Combine(builder.Environment.ContentRootPath, "PLANTILLA_CAJA_CHICA_NOVICOMPU.xlsx");

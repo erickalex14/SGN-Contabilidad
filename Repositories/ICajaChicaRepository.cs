@@ -11,6 +11,7 @@ namespace NovitecContabilidad.Repositories
         Task<List<CajaChicaCabecera>> GetBySucursalAsync(int sucursalId, int userId, bool isSuperAdmin);
         Task<bool> AnyCajaChicaAbiertaAsync(int sucursalId);
         Task<bool> AnyCajaChicaByNroAsync(string nroCajaChica);
+        Task<int> GetCountBySucursalAsync(int sucursalId);
         Task AddAsync(CajaChicaCabecera cabecera);
         Task<CajaChicaDetalle?> GetDetalleByIdAsync(long itemId);
         Task<CajaChicaDetalle?> GetDetalleByIdWithCabeceraAsync(long itemId);

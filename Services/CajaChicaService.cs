@@ -51,7 +51,6 @@ namespace NovitecContabilidad.Services
             }
             catch
             {
-                // Fallbacks
                 if (sucursalId == 2) return "Novitec Guayaquil";
                 if (sucursalId == 3) return "Novitec Manta";
                 return "Novitec Quito";
@@ -72,13 +71,16 @@ namespace NovitecContabilidad.Services
                 fechaCreacion = parsedDate;
             }
 
+            var count = await _repo.GetCountBySucursalAsync(req.SucursalId);
+            var secNum = (count + 1).ToString("D5");
             var dateStr = fechaCreacion.ToString("dd-MMMM-yyyy").ToUpper();
-            var nroCajaChica = $"{req.CodigoSucursal}-{dateStr}";
+            var nroCajaChica = $"{req.CodigoSucursal}-{secNum}-{dateStr}";
 
             int counter = 1;
             while (await _repo.AnyCajaChicaByNroAsync(nroCajaChica))
             {
-                nroCajaChica = $"{req.CodigoSucursal}-{dateStr}-{counter}";
+                var nextSec = (count + 1 + counter).ToString("D5");
+                nroCajaChica = $"{req.CodigoSucursal}-{nextSec}-{dateStr}";
                 counter++;
             }
 
@@ -121,14 +123,16 @@ namespace NovitecContabilidad.Services
             }
 
             var iva = Math.Round(req.SubtotalConIva * 0.15m, 2);
-            var total = req.SubtotalSinIva + req.SubtotalConIva + iva;
+            var totalFactura = req.SubtotalSinIva + req.SubtotalConIva + iva;
+            var montoRetencion = Math.Max(0.00m, req.MontoRetencion);
+            var netoEfectivoPagado = totalFactura - montoRetencion;
 
             var vueltoEsperado = 0.00m;
             var estadoVuelto = req.EstadoVuelto;
 
-            if (req.ValorEntregado > total)
+            if (req.ValorEntregado > netoEfectivoPagado)
             {
-                vueltoEsperado = req.ValorEntregado - total;
+                vueltoEsperado = req.ValorEntregado - netoEfectivoPagado;
                 if (estadoVuelto == "No Aplica" || string.IsNullOrEmpty(estadoVuelto))
                 {
                     estadoVuelto = "Pendiente";
@@ -151,7 +155,9 @@ namespace NovitecContabilidad.Services
                 SubtotalSinIva = req.SubtotalSinIva,
                 SubtotalConIva = req.SubtotalConIva,
                 Iva = iva,
-                Total = total,
+                MontoRetencion = montoRetencion,
+                NroRetencion = req.NroRetencion,
+                Total = totalFactura,
                 ValorEntregado = req.ValorEntregado,
                 UsuarioBeneficiado = req.UsuarioBeneficiado,
                 VueltoEsperado = vueltoEsperado,
@@ -192,14 +198,16 @@ namespace NovitecContabilidad.Services
             }
 
             var iva = Math.Round(req.SubtotalConIva * 0.15m, 2);
-            var total = req.SubtotalSinIva + req.SubtotalConIva + iva;
+            var totalFactura = req.SubtotalSinIva + req.SubtotalConIva + iva;
+            var montoRetencion = Math.Max(0.00m, req.MontoRetencion);
+            var netoEfectivoPagado = totalFactura - montoRetencion;
 
             var vueltoEsperado = 0.00m;
             var estadoVuelto = req.EstadoVuelto;
 
-            if (req.ValorEntregado > total)
+            if (req.ValorEntregado > netoEfectivoPagado)
             {
-                vueltoEsperado = req.ValorEntregado - total;
+                vueltoEsperado = req.ValorEntregado - netoEfectivoPagado;
                 if (estadoVuelto == "No Aplica" || string.IsNullOrEmpty(estadoVuelto))
                 {
                     estadoVuelto = "Pendiente";
@@ -219,7 +227,9 @@ namespace NovitecContabilidad.Services
             item.SubtotalSinIva = req.SubtotalSinIva;
             item.SubtotalConIva = req.SubtotalConIva;
             item.Iva = iva;
-            item.Total = total;
+            item.MontoRetencion = montoRetencion;
+            item.NroRetencion = req.NroRetencion;
+            item.Total = totalFactura;
             item.ValorEntregado = req.ValorEntregado;
             item.UsuarioBeneficiado = req.UsuarioBeneficiado;
             item.VueltoEsperado = vueltoEsperado;
@@ -228,6 +238,7 @@ namespace NovitecContabilidad.Services
             item.UpdatedAt = DateTime.UtcNow;
 
             item.CajaChica.UpdatedAt = DateTime.UtcNow;
+
             await _repo.SaveAsync();
 
             return MapToDetalleDto(item);
@@ -246,19 +257,36 @@ namespace NovitecContabilidad.Services
                 throw new InvalidOperationException("La Caja Chica está cerrada.");
             }
 
-            if (item.EstadoVuelto == "Devuelto")
-            {
-                throw new InvalidOperationException("No se puede eliminar un ítem cuyo vuelto ya fue devuelto y conciliado.");
-            }
-
             _repo.RemoveDetalle(item);
             item.CajaChica.UpdatedAt = DateTime.UtcNow;
             await _repo.SaveAsync();
         }
 
+        public async Task<CajaChicaDetalleDto> ReconcileVueltoAsync(long itemId)
+        {
+            var item = await _repo.GetDetalleByIdWithCabeceraAsync(itemId);
+            if (item == null || item.CajaChica == null)
+            {
+                throw new KeyNotFoundException("Ítem no encontrado.");
+            }
+
+            if (item.EstadoVuelto != "Pendiente")
+            {
+                throw new InvalidOperationException("Solo se pueden devolver vueltos que estén en estado Pendiente.");
+            }
+
+            item.EstadoVuelto = "Devuelto";
+            item.UpdatedAt = DateTime.UtcNow;
+
+            item.CajaChica.UpdatedAt = DateTime.UtcNow;
+            await _repo.SaveAsync();
+
+            return MapToDetalleDto(item);
+        }
+
         public async Task<CajaChicaCabeceraDto> CloseCajaChicaAsync(long id)
         {
-            var cabecera = await _repo.GetByIdAsync(id);
+            var cabecera = await _repo.GetByIdWithDetallesAsync(id);
             if (cabecera == null)
             {
                 throw new KeyNotFoundException("Caja Chica no encontrada.");
@@ -266,11 +294,17 @@ namespace NovitecContabilidad.Services
 
             if (cabecera.Estado != "Abierta")
             {
-                throw new InvalidOperationException("La Caja Chica ya está cerrada.");
+                throw new InvalidOperationException("La Caja Chica ya se encuentra cerrada o reembolsada.");
+            }
+
+            var hayVueltosPendientes = cabecera.Detalles.Any(d => d.EstadoVuelto == "Pendiente");
+            if (hayVueltosPendientes)
+            {
+                throw new InvalidOperationException("No se puede cerrar la Caja Chica porque existen vueltos pendientes por devolver.");
             }
 
             cabecera.Estado = "Cerrada";
-            cabecera.FechaCierre = DateTime.Today;
+            cabecera.FechaCierre = DateTime.UtcNow;
             cabecera.UpdatedAt = DateTime.UtcNow;
 
             await _repo.SaveAsync();
@@ -280,6 +314,7 @@ namespace NovitecContabilidad.Services
 
         public async Task<(CajaChicaCabeceraDto cajaReembolsada, CajaChicaCabeceraDto nuevaCajaAbierta)> ReimburseCajaChicaAsync(long id, ReimburseRequest req)
         {
+            decimal montoRecarga = req.MontoRecarga;
             var cabecera = await _repo.GetByIdWithDetallesAsync(id);
             if (cabecera == null)
             {
@@ -288,14 +323,13 @@ namespace NovitecContabilidad.Services
 
             if (cabecera.Estado != "Cerrada")
             {
-                throw new InvalidOperationException("Solo se pueden reembolsar cajas chicas en estado 'Cerrada'.");
+                throw new InvalidOperationException("Solo se pueden reembolsar Cajas Chicas que estén en estado Cerrada.");
             }
 
-            var totalGastado = cabecera.Detalles.Sum(d => d.Total);
-            var saldoRestante = cabecera.FondoInicial - totalGastado;
-
-            var montoEsperado = totalGastado;
-            var montoRecarga = req.MontoRecarga <= 0 ? montoEsperado : req.MontoRecarga;
+            var totalGastadoFacturas = cabecera.Detalles.Sum(d => d.Total);
+            var totalRetenciones = cabecera.Detalles.Sum(d => d.MontoRetencion);
+            var netoEfectivoGastado = totalGastadoFacturas - totalRetenciones;
+            var saldoRestante = cabecera.FondoInicial - netoEfectivoGastado;
 
             cabecera.Estado = "Reembolsada";
             cabecera.UpdatedAt = DateTime.UtcNow;
@@ -310,13 +344,16 @@ namespace NovitecContabilidad.Services
                 catch { }
             }
 
+            var count = await _repo.GetCountBySucursalAsync(cabecera.SucursalId);
+            var secNum = (count + 1).ToString("D5");
             var dateStr = nuevaFechaCreacion.ToString("dd-MMMM-yyyy").ToUpper();
-            var nuevoNro = $"{cabecera.CodigoSucursal}-{dateStr}";
+            var nuevoNro = $"{cabecera.CodigoSucursal}-{secNum}-{dateStr}";
 
             int counter = 1;
             while (await _repo.AnyCajaChicaByNroAsync(nuevoNro))
             {
-                nuevoNro = $"{cabecera.CodigoSucursal}-{dateStr}-{counter}";
+                var nextSec = (count + 1 + counter).ToString("D5");
+                nuevoNro = $"{cabecera.CodigoSucursal}-{nextSec}-{dateStr}";
                 counter++;
             }
 
@@ -396,6 +433,8 @@ namespace NovitecContabilidad.Services
                 SubtotalSinIva = d.SubtotalSinIva,
                 SubtotalConIva = d.SubtotalConIva,
                 Iva = d.Iva,
+                MontoRetencion = d.MontoRetencion,
+                NroRetencion = d.NroRetencion,
                 Total = d.Total,
                 ValorEntregado = d.ValorEntregado,
                 UsuarioBeneficiado = d.UsuarioBeneficiado,

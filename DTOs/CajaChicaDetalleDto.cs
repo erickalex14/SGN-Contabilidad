@@ -14,6 +14,8 @@ namespace NovitecContabilidad.DTOs
         public decimal SubtotalSinIva { get; set; }
         public decimal SubtotalConIva { get; set; }
         public decimal Iva { get; set; }
+        public decimal MontoRetencion { get; set; }
+        public string? NroRetencion { get; set; }
         public decimal Total { get; set; }
         public decimal ValorEntregado { get; set; }
         public string? UsuarioBeneficiado { get; set; }
